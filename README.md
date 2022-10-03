@@ -1,7 +1,7 @@
 # STORE_MERN_BACKEND
 Proyecto de una tienda de ropa con JavaScript, React, Node, Express, MongoDB y mas.
 
-### Variables de entorno:
+## Variables de entorno:
 MONGO_URI=mongodb+srv://
 JWT_SECRET=palabrasecreta
 CLOUDINARY_NAME=ejemplo323
