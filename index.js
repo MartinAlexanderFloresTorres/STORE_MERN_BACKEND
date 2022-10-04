@@ -21,11 +21,19 @@ dotenv.config();
 
 // Configurar cloudinary
 cloudinary.config({
+  cloud_name: "dcj09lsnh",
+  api_key: "222922371987432",
+  api_secret: "BN4X5Lz4ItuWmnuZHGp-Ek7Q7XY",
+  secure: true,
+});
+
+/* // Configurar cloudinary
+cloudinary.config({
   cloud_name: process.env.CLOUDINARY_NAME,
   api_key: process.env.CLOUDINARY_KEY,
   api_secret: process.env.CLOUDINARY_NAME,
   secure: true,
-});
+}); */
 
 // Configuracion de CORS
 const dominiosPermitidos = [
@@ -42,6 +50,7 @@ const corsOpciones = {
   },
 };
 // CORS
+
 app.use(cors(corsOpciones));
 
 // Rutas
