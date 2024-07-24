@@ -1,26 +1,13 @@
-import Producto from "../models/Producto.js";
-import deleteImages from "../cloudinary/deleteImages.js";
-import Coleccion from "../models/Coleccion.js";
-import generarId from "../helpers/generarId.js";
+import Producto from '../models/Producto.js';
+import deleteImages from '../cloudinary/deleteImages.js';
+import Coleccion from '../models/Coleccion.js';
+import generarId from '../helpers/generarId.js';
 
 // Crear producto
 const crearProducto = async (req, res) => {
   const { usuario } = req;
   const { portadas, galeria } = req;
-  const {
-    nombre,
-    marca,
-    unidades,
-    descuento,
-    precio,
-    coleccion,
-    tallas,
-    colores,
-    genero,
-    caracteristicas,
-    descripcion,
-    informacion,
-  } = req.body;
+  const { nombre, marca, unidades, descuento, precio, coleccion, tallas, colores, genero, caracteristicas, descripcion, informacion } = req.body;
 
   try {
     // Traer la coleccion
@@ -32,28 +19,23 @@ const crearProducto = async (req, res) => {
       await Promise.all(
         productoCreado.galeria.map(async (file) => {
           const { public_id } = file;
-          return await deleteImages({ public_id, folder: "productos" });
-        })
+          return await deleteImages({ public_id, folder: 'productos' });
+        }),
       );
 
       // Productos creados al maximo
       if (usuario.empresa.productosCreados > 6) {
-        const error = new Error(
-          "Lo sentimos a llegado a su maximo de crear 6 productos"
-        );
+        const error = new Error('Lo sentimos a llegado a su maximo de crear 6 productos');
         return res.status(401).json({ msg: error.message });
       }
       if (!coleccionSelect) {
-        const error = new Error("La coleccion no existe");
+        const error = new Error('La coleccion no existe');
         return res.status(404).json({ msg: error.message });
       }
     }
 
     // Quita todo los caracteres especiales y deja solo las letras y numeros
-    const _url = `${nombre
-      .toLowerCase()
-      .trim()
-      .replace(/ /g, "-")}${generarId()}`.replace(/[^a-zA-Z0-9-]/g, "");
+    const _url = `${nombre.toLowerCase().trim().replace(/ /g, '-')}${generarId()}`.replace(/[^a-zA-Z0-9-]/g, '');
 
     // crear producto
     const productoCreado = new Producto({
@@ -82,11 +64,7 @@ const crearProducto = async (req, res) => {
     coleccionSelect.productos.push(productoCreado._id);
 
     // Almacenar la coleccion y el producto
-    const [, productoAlmacenado] = await Promise.all([
-      await coleccionSelect.save(),
-      await productoCreado.save(),
-      await usuario.save(),
-    ]);
+    const [, productoAlmacenado] = await Promise.all([await coleccionSelect.save(), await productoCreado.save(), await usuario.save()]);
 
     res.json(productoAlmacenado);
   } catch (error) {
@@ -97,20 +75,7 @@ const crearProducto = async (req, res) => {
 
 // Actualizar un producto por su id
 const actualizarProducto = async (req, res) => {
-  const {
-    nombre,
-    marca,
-    unidades,
-    descuento,
-    precio,
-    coleccion,
-    tallas,
-    colores,
-    genero,
-    caracteristicas,
-    descripcion,
-    informacion,
-  } = req.body;
+  const { nombre, marca, unidades, descuento, precio, coleccion, tallas, colores, genero, caracteristicas, descripcion, informacion } = req.body;
 
   const { producto, portadas, galeria } = req;
 
@@ -120,37 +85,29 @@ const actualizarProducto = async (req, res) => {
 
     // No hay coleccion¡
     if (!coleccionSelect) {
-      const error = new Error("La coleccion del producto no existe");
+      const error = new Error('La coleccion del producto no existe');
       return res.status(404).json({ msg: error.message });
     }
 
     // la coleccion es direrente que elimine la coleccion actual del producto
     if (producto.coleccion._id.toString() !== coleccion) {
-      const coleccionDelete = await Coleccion.findById(
-        producto.coleccion._id.toString()
-      );
+      const coleccionDelete = await Coleccion.findById(producto.coleccion._id.toString());
       // Eliminar el producto de la colecciones
       coleccionDelete.productos.pull(producto._id);
       // Buscar la coleccion para guardar el producto
       coleccionSelect.productos.push(producto._id);
-      await Promise.all([
-        await coleccionDelete.save(),
-        await coleccionSelect.save(),
-      ]);
+      await Promise.all([await coleccionDelete.save(), await coleccionSelect.save()]);
     }
     // Eliminar las imagenes de cloudinary
     await Promise.all(
       producto.galeria.map(async (file) => {
         const { public_id } = file;
-        await deleteImages({ public_id, folder: "productos" });
-      })
+        await deleteImages({ public_id, folder: 'productos' });
+      }),
     );
 
     // Quita todo los caracteres especiales y deja solo las letras y numeros
-    const _url = `${nombre
-      .toLowerCase()
-      .trim()
-      .replace(/ /g, "-")}${generarId()}`.replace(/[^a-zA-Z0-9-]/g, "");
+    const _url = `${nombre.toLowerCase().trim().replace(/ /g, '-')}${generarId()}`.replace(/[^a-zA-Z0-9-]/g, '');
 
     // Actualizar producto
     producto.nombre = nombre;
@@ -186,11 +143,11 @@ const obtenerProductos = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
 
   // traer los productos por el genero
-  const genero = req.query.genero || "Hombre";
+  const genero = req.query.genero || 'Hombre';
 
   // Si genero es invalido enviar error
-  if (genero !== "Hombre" && genero !== "Mujer" && genero !== "Unisex") {
-    const error = new Error("El genero no es valido");
+  if (genero !== 'Hombre' && genero !== 'Mujer' && genero !== 'Unisex') {
+    const error = new Error('El genero no es valido');
     return res.status(400).json({ msg: error.message });
   }
 
@@ -212,170 +169,140 @@ const obtenerProductos = async (req, res) => {
 
   try {
     // filtrar lo mas vendidos
-    if (req.query.orden === "mas-vendidos") {
+    if (req.query.orden === 'mas-vendidos') {
       // traer productos mas vendidos y por el genero
       // si genero es unisex traer todos los productos de todos los generos
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { ventas: -1 },
-        }
-      );
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { ventas: -1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por A-Z
-    else if (req.query.orden === "A-Z") {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { nombre: 1 },
-        }
-      );
+    else if (req.query.orden === 'A-Z') {
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { nombre: 1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por Z-A
-    else if (req.query.orden === "Z-A") {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { nombre: -1 },
-        }
-      );
+    else if (req.query.orden === 'Z-A') {
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { nombre: -1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por descuentos de mayor a menor
-    else if (req.query.orden === "descuento-mayor-menor") {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { descuento: -1 },
-        }
-      );
+    else if (req.query.orden === 'descuento-mayor-menor') {
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { descuento: -1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por descuentos de menor a mayor
-    else if (req.query.orden === "descuento-menor-mayor") {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { descuento: 1 },
-        }
-      );
+    else if (req.query.orden === 'descuento-menor-mayor') {
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { descuento: 1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por precio de menor a mayor
-    else if (req.query.orden === "precio-menor-mayor") {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { precio: 1 },
-        }
-      );
+    else if (req.query.orden === 'precio-menor-mayor') {
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { precio: 1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por precio de mayor a menor
-    else if (req.query.orden === "precio-mayor-menor") {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { precio: -1 },
-        }
-      );
+    else if (req.query.orden === 'precio-mayor-menor') {
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { precio: -1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por fecha de antigua a reciente
-    else if (req.query.orden === "fecha-antigua-reciente") {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { createdAt: 1 },
-        }
-      );
+    else if (req.query.orden === 'fecha-antigua-reciente') {
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { createdAt: 1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por fecha de reciente a antigua
-    else if (req.query.orden === "fecha-reciente-antigua") {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        {
-          page,
-          limit,
-          sort: { createdAt: -1 },
-        }
-      );
+    else if (req.query.orden === 'fecha-reciente-antigua') {
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, {
+        page,
+        limit,
+        sort: { createdAt: -1 },
+      });
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // si no hay orden
     else {
-      const productos = await Producto.paginate(
-        genero === "Unisex" ? null : { genero },
-        { page, limit }
-      );
+      const productos = await Producto.paginate(genero === 'Unisex' ? null : { genero }, { page, limit });
 
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
 
@@ -393,13 +320,13 @@ const obtenerProducto = async (req, res) => {
 
   try {
     const producto = await Producto.findOne({ url })
-      .populate("creador")
+      .populate('creador')
       // de la coleccion solo quiero el nombre, url y _id
-      .populate("coleccion", "nombre _id url");
+      .populate('coleccion', 'nombre _id url');
 
     // No Hay producto¡
     if (!producto) {
-      const error = new Error("No se a encontrado el producto");
+      const error = new Error('No se a encontrado el producto');
       return res.status(404).json({ msg: error.message });
     }
 
@@ -445,17 +372,17 @@ const obtenerProducto = async (req, res) => {
 
 // Buscar  productos por su nombre
 const buscarProductos = async (req, res) => {
-  const { q, orden } = req.query;
+  const { q = '', orden } = req.query;
 
   // agregar la paginacion de mongoose-paginate-v2
   const page = parseInt(req.query.page) || 1;
 
   // traer los productos por el genero
-  const genero = req.query.genero || "Hombre";
+  const genero = req.query.genero || 'Hombre';
 
   // Si genero es invalido enviar error
-  if (genero !== "Hombre" && genero !== "Mujer" && genero !== "Unisex") {
-    const error = new Error("El genero no es valido");
+  if (genero !== 'Hombre' && genero !== 'Mujer' && genero !== 'Unisex') {
+    const error = new Error('El genero no es valido');
     return res.status(400).json({ msg: error.message });
   }
 
@@ -477,406 +404,292 @@ const buscarProductos = async (req, res) => {
 
   try {
     // Buscar productos
-    if (q) {
-      const regex = new RegExp(q, "i");
-      // filtar por busqueda y ordenar por los filtros
-      if (orden) {
-        // filtrar lo mas vendidos
-        if (orden === "mas-vendidos") {
-          // si genero es unisex traer todos los productos de todos los generos
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { ventas: -1 },
-            }
-          );
 
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        }
-        // filtrar por A-Z
-        else if (orden === "A-Z") {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { nombre: 1 },
-            }
-          );
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        }
-        // filtrar por Z-A
-        else if (orden === "Z-A") {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { nombre: -1 },
-            }
-          );
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        }
-        // filtrar por descuentos de mayor a menor
-        else if (orden === "descuento-mayor-menor") {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { descuento: -1 },
-            }
-          );
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        }
-        // filtrar por descuentos de menor a mayor
-        else if (orden === "descuento-menor-mayor") {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { descuento: 1 },
-            }
-          );
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        }
-        // filtrar por precio de menor a mayor
-        else if (orden === "precio-menor-mayor") {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { precio: 1 },
-            }
-          );
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        }
-        // filtrar por precio de mayor a menor
-        else if (orden === "precio-mayor-menor") {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { precio: -1 },
-            }
-          );
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        }
-        // filtrar por fecha de antigua a reciente
-        else if (orden === "fecha-antigua-reciente") {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { createdAt: 1 },
-            }
-          );
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        }
-        // filtrar por fecha de reciente a antigua
-        else if (orden === "fecha-reciente-antigua") {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { createdAt: -1 },
-            }
-          );
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron productos de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-          res.json(productos);
-        } else {
-          const productos = await Producto.paginate(
-            genero === "Unisex"
-              ? {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                }
-              : {
-                  $or: [
-                    { nombre: regex },
-                    { descripcion: regex },
-                    { informacion: regex },
-                  ],
-                  genero,
-                },
-            {
-              page,
-              limit,
-              select: "portadas nombre precio descuento marca unidades url _id",
-              sort: { ventas: -1 },
-            }
-          );
-
-          // No Hay productos¡
-          if (productos.docs.length === 0) {
-            const error = new Error(
-              "No se encontraron resultados de la busqueda " + q
-            );
-            return res.status(404).json({ msg: error.message });
-          }
-        }
-      } else {
+    const regex = new RegExp(q, 'i');
+    // filtar por busqueda y ordenar por los filtros
+    if (orden) {
+      // filtrar lo mas vendidos
+      if (orden === 'mas-vendidos') {
+        // si genero es unisex traer todos los productos de todos los generos
         const productos = await Producto.paginate(
-          genero === "Unisex"
+          genero === 'Unisex'
             ? {
-                $or: [
-                  { nombre: regex },
-                  { descripcion: regex },
-                  { informacion: regex },
-                ],
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
               }
             : {
-                $or: [
-                  { nombre: regex },
-                  { descripcion: regex },
-                  { informacion: regex },
-                ],
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
                 genero,
               },
           {
             page,
             limit,
-            select: "portadas nombre precio descuento marca unidades url _id",
+            select: 'portadas nombre precio descuento marca unidades url _id',
             sort: { ventas: -1 },
-          }
+          },
         );
 
         // No Hay productos¡
         if (productos.docs.length === 0) {
-          const error = new Error(
-            "No se encontraron resultados de la busqueda " + q
-          );
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
           return res.status(404).json({ msg: error.message });
         }
-
-        // Enviar productos
         res.json(productos);
       }
+      // filtrar por A-Z
+      else if (orden === 'A-Z') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { nombre: 1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por Z-A
+      else if (orden === 'Z-A') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { nombre: -1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por descuentos de mayor a menor
+      else if (orden === 'descuento-mayor-menor') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { descuento: -1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por descuentos de menor a mayor
+      else if (orden === 'descuento-menor-mayor') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { descuento: 1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por precio de menor a mayor
+      else if (orden === 'precio-menor-mayor') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { precio: 1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por precio de mayor a menor
+      else if (orden === 'precio-mayor-menor') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { precio: -1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por fecha de antigua a reciente
+      else if (orden === 'fecha-antigua-reciente') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { createdAt: 1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por fecha de reciente a antigua
+      else if (orden === 'fecha-reciente-antigua') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { createdAt: -1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      } else {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+              },
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { ventas: -1 },
+          },
+        );
+
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron resultados de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+      }
     } else {
-      const error = new Error("No hay valor de busqueda");
-      return res.status(404).json({ msg: error.message });
+      const productos = await Producto.paginate(
+        genero === 'Unisex'
+          ? {
+              $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+            }
+          : {
+              $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              genero,
+            },
+        {
+          page,
+          limit,
+          select: 'portadas nombre precio descuento marca unidades url _id',
+          sort: { ventas: -1 },
+        },
+      );
+
+      // No Hay productos¡
+      if (productos.docs.length === 0) {
+        const error = new Error('No se encontraron resultados de la busqueda ' + q);
+        return res.status(404).json({ msg: error.message });
+      }
+
+      // Enviar productos
+      res.json(productos);
     }
   } catch (error) {
     console.log(error.message);
@@ -894,7 +707,7 @@ const eliminarProducto = async (req, res) => {
 
     // Producto no existe¡
     if (!producto) {
-      const error = new Error("Producto no existe");
+      const error = new Error('Producto no existe');
       return res.status(404).json({ msg: error.message });
     }
 
@@ -903,7 +716,7 @@ const eliminarProducto = async (req, res) => {
 
     // No hay coleccion¡
     if (!coleccionSelect) {
-      const error = new Error("La coleccion del producto no existe");
+      const error = new Error('La coleccion del producto no existe');
       return res.status(404).json({ msg: error.message });
     }
 
@@ -914,18 +727,14 @@ const eliminarProducto = async (req, res) => {
     await Promise.all(
       producto.galeria.map(async (file) => {
         const { public_id } = file;
-        return await deleteImages({ public_id, folder: "productos" });
-      })
+        return await deleteImages({ public_id, folder: 'productos' });
+      }),
     );
     // Disminuir el contador
     usuario.productosCreados -= 1;
     // Actualizar la coleccion y  Eliminar producto
-    await Promise.all([
-      await coleccionSelect.save(),
-      await producto.deleteOne(),
-      await usuario.save(),
-    ]);
-    res.json({ msg: "El producto a sido eliminado correctamente" });
+    await Promise.all([await coleccionSelect.save(), await producto.deleteOne(), await usuario.save()]);
+    res.json({ msg: 'El producto a sido eliminado correctamente' });
   } catch (error) {
     console.log(error.message);
     res.status(400).json({ msg: error.message });
@@ -938,11 +747,11 @@ const obtenerOfertas = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
 
   // traer los productos por el genero
-  const genero = req.query.genero || "Hombre";
+  const genero = req.query.genero || 'Hombre';
 
   // Si genero es invalido enviar error
-  if (genero !== "Hombre" && genero !== "Mujer" && genero !== "Unisex") {
-    const error = new Error("El genero no es valido");
+  if (genero !== 'Hombre' && genero !== 'Mujer' && genero !== 'Unisex') {
+    const error = new Error('El genero no es valido');
     return res.status(400).json({ msg: error.message });
   }
 
@@ -964,10 +773,10 @@ const obtenerOfertas = async (req, res) => {
 
   try {
     // filtrar lo mas vendidos
-    if (req.query.orden === "mas-vendidos") {
+    if (req.query.orden === 'mas-vendidos') {
       // traer productos mas vendidos y por el genero
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -978,20 +787,20 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { ventas: -1, descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por A-Z
-    else if (req.query.orden === "A-Z") {
+    else if (req.query.orden === 'A-Z') {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1002,20 +811,20 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { nombre: 1, descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por Z-A
-    else if (req.query.orden === "Z-A") {
+    else if (req.query.orden === 'Z-A') {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1026,20 +835,20 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { nombre: -1, descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por descuentos de mayor a menor
-    else if (req.query.orden === "descuento-mayor-menor") {
+    else if (req.query.orden === 'descuento-mayor-menor') {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1050,20 +859,20 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por descuentos de menor a mayor
-    else if (req.query.orden === "descuento-menor-mayor") {
+    else if (req.query.orden === 'descuento-menor-mayor') {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1074,20 +883,20 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { descuento: 1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por precio de menor a mayor
-    else if (req.query.orden === "precio-menor-mayor") {
+    else if (req.query.orden === 'precio-menor-mayor') {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1098,20 +907,20 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { precio: 1, descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por precio de mayor a menor
-    else if (req.query.orden === "precio-mayor-menor") {
+    else if (req.query.orden === 'precio-mayor-menor') {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1122,20 +931,20 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { precio: -1, descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por fecha de antigua a reciente
-    else if (req.query.orden === "fecha-antigua-reciente") {
+    else if (req.query.orden === 'fecha-antigua-reciente') {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1146,20 +955,20 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { createdAt: 1, descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por fecha de reciente a antigua
-    else if (req.query.orden === "fecha-reciente-antigua") {
+    else if (req.query.orden === 'fecha-reciente-antigua') {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1170,12 +979,12 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { createdAt: -1, descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
@@ -1183,7 +992,7 @@ const obtenerOfertas = async (req, res) => {
     // si no hay orden
     else {
       const productos = await Producto.paginate(
-        genero === "Unisex"
+        genero === 'Unisex'
           ? { descuento: { $gt: 0 }, unidades: { $gt: 0 } }
           : {
               descuento: { $gt: 0 },
@@ -1194,13 +1003,13 @@ const obtenerOfertas = async (req, res) => {
           page,
           limit,
           sort: { createdAt: -1, descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
 
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
 
@@ -1221,11 +1030,11 @@ const obtenerProductosCreador = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
 
     // traer los productos por el genero
-    const genero = req.query.genero || "Hombre";
+    const genero = req.query.genero || 'Hombre';
 
     // Si genero es invalido enviar error
-    if (genero !== "Hombre" && genero !== "Mujer" && genero !== "Unisex") {
-      const error = new Error("El genero no es valido");
+    if (genero !== 'Hombre' && genero !== 'Mujer' && genero !== 'Unisex') {
+      const error = new Error('El genero no es valido');
       return res.status(400).json({ msg: error.message });
     }
 
@@ -1245,7 +1054,7 @@ const obtenerProductosCreador = async (req, res) => {
       10- genero - Hombre - Mujer - Unisex
     */
     // filtrar lo mas vendidos
-    if (req.query.orden === "mas-vendidos") {
+    if (req.query.orden === 'mas-vendidos') {
       // traer productos mas vendidos y por el genero
       const productos = await Producto.paginate(
         { creador: _id, genero },
@@ -1253,156 +1062,156 @@ const obtenerProductosCreador = async (req, res) => {
           page,
           limit,
           sort: { ventas: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por A-Z
-    else if (req.query.orden === "A-Z") {
+    else if (req.query.orden === 'A-Z') {
       const productos = await Producto.paginate(
         { creador: _id, genero },
         {
           page,
           limit,
           sort: { nombre: 1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por Z-A
-    else if (req.query.orden === "Z-A") {
+    else if (req.query.orden === 'Z-A') {
       const productos = await Producto.paginate(
         { creador: _id, genero },
         {
           page,
           limit,
           sort: { nombre: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por descuentos de mayor a menor
-    else if (req.query.orden === "descuento-mayor-menor") {
+    else if (req.query.orden === 'descuento-mayor-menor') {
       const productos = await Producto.paginate(
         { creador: _id, genero },
         {
           page,
           limit,
           sort: { descuento: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por descuentos de menor a mayor
-    else if (req.query.orden === "descuento-menor-mayor") {
+    else if (req.query.orden === 'descuento-menor-mayor') {
       const productos = await Producto.paginate(
         { creador: _id, genero },
         {
           page,
           limit,
           sort: { descuento: 1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por precio de menor a mayor
-    else if (req.query.orden === "precio-menor-mayor") {
+    else if (req.query.orden === 'precio-menor-mayor') {
       const productos = await Producto.paginate(
         { creador: _id, genero },
         {
           page,
           limit,
           sort: { precio: 1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por precio de mayor a menor
-    else if (req.query.orden === "precio-mayor-menor") {
+    else if (req.query.orden === 'precio-mayor-menor') {
       const productos = await Producto.paginate(
         { creador: _id, genero },
         {
           page,
           limit,
           sort: { precio: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por fecha de antigua a reciente
-    else if (req.query.orden === "fecha-antigua-reciente") {
+    else if (req.query.orden === 'fecha-antigua-reciente') {
       const productos = await Producto.paginate(
         { creador: _id, genero },
         {
           page,
           limit,
           sort: { createdAt: 1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
     }
     // filtrar por fecha de reciente a antigua
-    else if (req.query.orden === "fecha-reciente-antigua") {
+    else if (req.query.orden === 'fecha-reciente-antigua') {
       const productos = await Producto.paginate(
         { creador: _id, genero },
         {
           page,
           limit,
           sort: { createdAt: -1 },
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
       res.json(productos);
@@ -1414,13 +1223,13 @@ const obtenerProductosCreador = async (req, res) => {
         {
           page,
           limit,
-          select: "portadas nombre precio descuento marca unidades url _id",
-        }
+          select: 'portadas nombre precio descuento marca unidades url _id',
+        },
       );
 
       // si no hay productos
       if (productos.docs.length === 0) {
-        const error = new Error("No se encontraron productos");
+        const error = new Error('No se encontraron productos');
         return res.status(404).json({ msg: error.message });
       }
 
@@ -1433,13 +1242,4 @@ const obtenerProductosCreador = async (req, res) => {
 };
 
 // Exportar las funciones
-export {
-  crearProducto,
-  obtenerProductos,
-  obtenerProducto,
-  actualizarProducto,
-  buscarProductos,
-  eliminarProducto,
-  obtenerOfertas,
-  obtenerProductosCreador,
-};
+export { crearProducto, obtenerProductos, obtenerProducto, actualizarProducto, buscarProductos, eliminarProducto, obtenerOfertas, obtenerProductosCreador };
