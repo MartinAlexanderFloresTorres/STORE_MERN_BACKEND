@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Router } from 'express';
 import {
   crearProducto,
   obtenerProductos,
@@ -8,10 +8,11 @@ import {
   eliminarProducto,
   obtenerOfertas,
   obtenerProductosCreador,
-} from "../controllers/productosController.js";
-import checkAuth from "../middleware/checkAuth.js";
-import uploads from "../middleware/uploads.js";
-import fileUpload from "express-fileupload";
+  actualizarStock,
+} from '../controllers/productosController.js';
+import checkAuth from '../middleware/checkAuth.js';
+import uploads from '../middleware/uploads.js';
+import fileUpload from 'express-fileupload';
 
 const productoRoutes = Router();
 
@@ -21,42 +22,45 @@ const productoRoutes = Router();
 
 // Crear producto
 productoRoutes.post(
-  "/",
+  '/',
   checkAuth,
   fileUpload({
     useTempFiles: false,
   }),
   uploads,
-  crearProducto
+  crearProducto,
 );
 
 // Actualizar un producto por su id
 productoRoutes.put(
-  "/:id",
+  '/:id',
   checkAuth,
   fileUpload({
     useTempFiles: false,
   }),
   uploads,
-  actualizarProducto
+  actualizarProducto,
 );
 
+// Acualizar stock
+productoRoutes.patch('/stock/:id', actualizarStock);
+
 // Obtener todos los productos
-productoRoutes.get("/", obtenerProductos);
+productoRoutes.get('/', obtenerProductos);
 
 // Obtener un producto por su url
-productoRoutes.get("/:url", obtenerProducto);
+productoRoutes.get('/:url', obtenerProducto);
 
 // Eliminar un producto por su id
-productoRoutes.delete("/:id", checkAuth, eliminarProducto);
+productoRoutes.delete('/:id', checkAuth, eliminarProducto);
 
 // Buscar productos por nombre
-productoRoutes.get("/search/producto", buscarProductos);
+productoRoutes.get('/search/producto', buscarProductos);
 
 // Obtener las ofertas
-productoRoutes.get("/ofertas/semana", obtenerOfertas);
+productoRoutes.get('/ofertas/semana', obtenerOfertas);
 
 // Obtener los productos creados por un usuario
-productoRoutes.get("/creador/productos", checkAuth, obtenerProductosCreador);
+productoRoutes.get('/creador/productos', checkAuth, obtenerProductosCreador);
 
 export default productoRoutes;

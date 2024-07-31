@@ -137,6 +137,31 @@ const actualizarProducto = async (req, res) => {
   }
 };
 
+// Actualizar el stock
+const actualizarStock = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const producto = await Producto.findById(id);
+
+    if (!producto) {
+      const error = new Error('El producto no existe');
+      return res.status(404).json({ msg: error.message });
+    }
+
+    // Actualizar el stock
+    producto.unidades = req.body.unidades;
+
+    const productoActualizado = await producto.save();
+
+    // Respuesta
+    res.json(productoActualizado);
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ msg: error.message });
+  }
+};
+
 // Obtener todos los productos
 const obtenerProductos = async (req, res) => {
   // agregar la paginacion de mongoose-paginate-v2
@@ -1242,4 +1267,4 @@ const obtenerProductosCreador = async (req, res) => {
 };
 
 // Exportar las funciones
-export { crearProducto, obtenerProductos, obtenerProducto, actualizarProducto, buscarProductos, eliminarProducto, obtenerOfertas, obtenerProductosCreador };
+export { crearProducto, obtenerProductos, obtenerProducto, actualizarProducto, buscarProductos, eliminarProducto, obtenerOfertas, obtenerProductosCreador, actualizarStock };
