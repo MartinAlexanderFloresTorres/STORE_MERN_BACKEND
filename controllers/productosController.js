@@ -722,6 +722,356 @@ const buscarProductos = async (req, res) => {
   }
 };
 
+// Buscar  productos por su nombre
+const buscarProductosByCategory = async (req, res) => {
+  const { q = '', orden } = req.query;
+  const { coleccionId } = req.params;
+
+  // agregar la paginacion de mongoose-paginate-v2
+  const page = parseInt(req.query.page) || 1;
+
+  // traer los productos por el genero
+  const genero = req.query.genero || 'Hombre';
+
+  // Si genero es invalido enviar error
+  if (genero !== 'Hombre' && genero !== 'Mujer' && genero !== 'Unisex') {
+    const error = new Error('El genero no es valido');
+    return res.status(400).json({ msg: error.message });
+  }
+
+  const limit = 12;
+
+  /* 
+   (Filtros)
+   1- mas vendidos
+   2- A-Z
+   3- Z-A
+   4- Descuentos de mayor a menor
+   5- Descuentos de menor a mayor
+   6- precio mejor a mayor
+   7- precio mayor a menor
+   8- Fecha de antigua a reciente
+   9- Fecha de reciente a antiguo
+   10- genero - Hombre - Mujer - Unisex
+  */
+
+  try {
+    // Buscar productos
+
+    const regex = new RegExp(q, 'i');
+    // filtar por busqueda y ordenar por los filtros
+    if (orden) {
+      // filtrar lo mas vendidos
+      if (orden === 'mas-vendidos') {
+        // si genero es unisex traer todos los productos de todos los generos
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { ventas: -1 },
+          },
+        );
+
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por A-Z
+      else if (orden === 'A-Z') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { nombre: 1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por Z-A
+      else if (orden === 'Z-A') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { nombre: -1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por descuentos de mayor a menor
+      else if (orden === 'descuento-mayor-menor') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { descuento: -1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por descuentos de menor a mayor
+      else if (orden === 'descuento-menor-mayor') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { descuento: 1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por precio de menor a mayor
+      else if (orden === 'precio-menor-mayor') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { precio: 1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por precio de mayor a menor
+      else if (orden === 'precio-mayor-menor') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { precio: -1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por fecha de antigua a reciente
+      else if (orden === 'fecha-antigua-reciente') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { createdAt: 1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      }
+      // filtrar por fecha de reciente a antigua
+      else if (orden === 'fecha-reciente-antigua') {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { createdAt: -1 },
+          },
+        );
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron productos de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+        res.json(productos);
+      } else {
+        const productos = await Producto.paginate(
+          genero === 'Unisex'
+            ? {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                $and: [{ coleccion: coleccionId }],
+              }
+            : {
+                $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+                genero,
+                $and: [{ coleccion: coleccionId }],
+              },
+          {
+            page,
+            limit,
+            select: 'portadas nombre precio descuento marca unidades url _id',
+            sort: { ventas: -1 },
+          },
+        );
+
+        // No Hay productos¡
+        if (productos.docs.length === 0) {
+          const error = new Error('No se encontraron resultados de la busqueda ' + q);
+          return res.status(404).json({ msg: error.message });
+        }
+      }
+    } else {
+      const productos = await Producto.paginate(
+        genero === 'Unisex'
+          ? {
+              $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              $and: [{ coleccion: coleccionId }],
+            }
+          : {
+              $or: [{ nombre: regex }, { descripcion: regex }, { informacion: regex }],
+              genero,
+              $and: [{ coleccion: coleccionId }],
+            },
+        {
+          page,
+          limit,
+          select: 'portadas nombre precio descuento marca unidades url _id',
+          sort: { ventas: -1 },
+        },
+      );
+
+      // No Hay productos¡
+      if (productos.docs.length === 0) {
+        const error = new Error('No se encontraron resultados de la busqueda ' + q);
+        return res.status(404).json({ msg: error.message });
+      }
+
+      // Enviar productos
+      res.json(productos);
+    }
+  } catch (error) {
+    console.log(error.message);
+    res.status(400).json({ msg: error.message });
+  }
+};
+
 // Eliminar un producto por su id
 const eliminarProducto = async (req, res) => {
   const { usuario } = req;
@@ -1267,4 +1617,4 @@ const obtenerProductosCreador = async (req, res) => {
 };
 
 // Exportar las funciones
-export { crearProducto, obtenerProductos, obtenerProducto, actualizarProducto, buscarProductos, eliminarProducto, obtenerOfertas, obtenerProductosCreador, actualizarStock };
+export { crearProducto, obtenerProductos, obtenerProducto, actualizarProducto, buscarProductos, eliminarProducto, obtenerOfertas, obtenerProductosCreador, actualizarStock, buscarProductosByCategory };

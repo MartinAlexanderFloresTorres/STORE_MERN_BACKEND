@@ -9,6 +9,7 @@ import {
   obtenerOfertas,
   obtenerProductosCreador,
   actualizarStock,
+  buscarProductosByCategory,
 } from '../controllers/productosController.js';
 import checkAuth from '../middleware/checkAuth.js';
 import uploads from '../middleware/uploads.js';
@@ -56,6 +57,9 @@ productoRoutes.delete('/:id', checkAuth, eliminarProducto);
 
 // Buscar productos por nombre
 productoRoutes.get('/search/producto', buscarProductos);
+
+// Buscar productos por nombre y categoria
+productoRoutes.get('/search/producto/:coleccionId', buscarProductosByCategory);
 
 // Obtener las ofertas
 productoRoutes.get('/ofertas/semana', obtenerOfertas);
